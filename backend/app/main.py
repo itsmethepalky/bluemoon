@@ -112,20 +112,20 @@ async def security_headers(request, call_next):
     # - Supabase API/auth
     # - same-origin API/frontend
     #
-    # 'unsafe-inline' is currently required because several existing HTML
-    # pages contain inline scripts/styles. We can tighten this later by
-    # migrating those inline blocks to external files/nonces.
+    # Inline JavaScript is not allowed by this CSP.
+    # Existing inline styles remain allowed for the current frontend.
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "base-uri 'self'; "
         "form-action 'self'; "
         "frame-ancestors 'self'; "
         "object-src 'none'; "
-        "script-src 'self' https://cdn.jsdelivr.net; "
+        "script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
         "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
         "img-src 'self' data: blob: https:; "
-        "connect-src 'self' https://*.supabase.co; "
+        "frame-src 'self' https://challenges.cloudflare.com; "
+        "connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com; "
     )
 
     return response

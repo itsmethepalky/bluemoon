@@ -56,14 +56,34 @@ $$;
 
 create or replace function private.is_staff()
 returns boolean
-language sql stable security definer set search_path = public
+language sql
+stable
+security definer
+set search_path = public
 as $$
-  select coalesce((select role in ('admin','staff') from public.profiles where id = auth.uid()), false);
+  select coalesce(
+    (
+      select role in ('admin', 'staff') and is_active
+      from public.profiles
+      where id = auth.uid()
+    ),
+    false
+  );
 $$;
 
 create or replace function private.is_admin()
 returns boolean
-language sql stable security definer set search_path = public
+language sql
+stable
+security definer
+set search_path = public
 as $$
-  select coalesce((select role = 'admin' from public.profiles where id = auth.uid()), false);
+  select coalesce(
+    (
+      select role = 'admin' and is_active
+      from public.profiles
+      where id = auth.uid()
+    ),
+    false
+  );
 $$;

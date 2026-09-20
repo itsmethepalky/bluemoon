@@ -26,6 +26,31 @@ async function goToApp() {
       : "dashboard.html";
 }
 
+async function waitForTurnstile() {
+  for (let i = 0; i < 100; i += 1) {
+    if (window.turnstile) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+}
+
+let loginTurnstileWidgetId = null;
+
+async function initializeLoginTurnstile() {
+  const ready = await waitForTurnstile();
+  if (!ready) return;
+
+  const container = document.getElementById("loginTurnstile");
+  if (!container || loginTurnstileWidgetId !== null) return;
+
+  loginTurnstileWidgetId = window.turnstile.render(container, {
+    sitekey: container.dataset.sitekey,
+    theme: "auto",
+  });
+}
+
+initializeLoginTurnstile();
+
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -40,11 +65,25 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const password = document.getElementById("password").value;
 
   try {
-    const { error } =
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const ready = await waitForTurnstile();
+
+    if (!ready || loginTurnstileWidgetId === null) {
+      throw new Error("Security verification is still loading. Please try again.");
+    }
+
+    const captchaToken = window.turnstile.getResponse(loginTurnstileWidgetId);
+
+    if (!captchaToken) {
+      throw new Error("Please complete the security verification.");
+    }
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+      options: {
+        captchaToken,
+      },
+    });
 
     if (error) throw error;
 
@@ -52,10 +91,14 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   } catch (err) {
     errorBox.textContent =
       err.message || "Sign in failed. Please try again.";
-
     errorBox.style.display = "block";
+
+    if (loginTurnstileWidgetId !== null && window.turnstile) {
+      window.turnstile.reset(loginTurnstileWidgetId);
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = "Sign in";
   }
 });
+
