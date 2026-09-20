@@ -183,6 +183,19 @@ async function getSupabaseSession() {
  *
  * All simultaneous refresh attempts share the same promise.
  */
+async function clearLocalAuthSession() {
+  try {
+    console.warn("[AUTH] Clearing stale local Supabase session...");
+    await supabaseClient.auth.signOut({ scope: "local" });
+  } catch (err) {
+    console.error("[AUTH] Could not clear local Supabase session:", err);
+  }
+
+  _resolvedSession = null;
+  _profilePromise = null;
+  _refreshPromise = null;
+}
+
 async function refreshSupabaseSession() {
   if (_refreshPromise) {
     return _refreshPromise;
@@ -260,155 +273,93 @@ async function refreshSupabaseSession() {
 // ==========================================================================
 
 async function resolveApplicationSession() {
-  /*
-   * IMPORTANT:
-   *
-   * Wait for Supabase itself before doing anything with /api/auth/me.
-   */
+  // Wait until Supabase restores its browser session.
   await waitForInitialSession();
 
-  let sbSession =
-    await getSupabaseSession();
+  let sbSession = await getSupabaseSession();
 
-  /*
-   * No Supabase session.
-   */
+  // No Supabase session = genuinely signed out.
   if (!sbSession) {
     _resolvedSession = null;
     return null;
   }
 
-
-  /*
-   * Ask our FastAPI backend for the application profile.
-   */
   try {
-    let res = await fetch(
-      `${API_BASE}/auth/me`,
-      {
-        method: "GET",
+    let res = await fetch(`${API_BASE}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${sbSession.access_token}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
 
-        headers: {
-          Authorization:
-            `Bearer ${sbSession.access_token}`,
-
-          Accept: "application/json",
-        },
-
-        cache: "no-store",
-      }
-    );
-
-
-    // ----------------------------------------------------------------------
-    // 401 - token may be expired/stale
-    // ----------------------------------------------------------------------
-
+    // 401 = stale/expired token. Refresh exactly once.
     if (res.status === 401) {
       console.warn(
-        "[AUTH] /api/auth/me returned 401."
+        "[AUTH] /api/auth/me returned 401. Trying token refresh..."
       );
 
-      const refreshed =
-        await refreshSupabaseSession();
+      const refreshed = await refreshSupabaseSession();
 
       if (refreshed?.access_token) {
         sbSession = refreshed;
 
-        res = await fetch(
-          `${API_BASE}/auth/me`,
-          {
-            method: "GET",
-
-            headers: {
-              Authorization:
-                `Bearer ${refreshed.access_token}`,
-
-              Accept: "application/json",
-            },
-
-            cache: "no-store",
-          }
-        );
+        res = await fetch(`${API_BASE}/auth/me`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${refreshed.access_token}`,
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        });
       }
     }
 
-
-    // ----------------------------------------------------------------------
-    // Successful profile lookup
-    // ----------------------------------------------------------------------
-
+    // Successful authentication.
     if (res.ok) {
       const profile = await res.json();
 
       _resolvedSession = {
-        access_token:
-          sbSession.access_token,
-
-        refresh_token:
-          sbSession.refresh_token,
-
-        user_id:
-          profile.id,
-
-        role:
-          profile.role,
-
-        full_name:
-          profile.full_name,
-
-        email:
-          profile.email,
+        access_token: sbSession.access_token,
+        refresh_token: sbSession.refresh_token,
+        user_id: profile.id,
+        role: profile.role,
+        full_name: profile.full_name,
+        email: profile.email,
       };
 
       return _resolvedSession;
     }
 
+    // Second 401 = stale/invalid browser session.
+    if (res.status === 401) {
+      console.error(
+        "[AUTH] Backend rejected Supabase token even after refresh."
+      );
 
-    // ----------------------------------------------------------------------
-    // Backend error
-    // ----------------------------------------------------------------------
+      await clearLocalAuthSession();
+      return null;
+    }
 
+    // 403 = authenticated but forbidden/disabled.
+    if (res.status === 403) {
+      console.warn(
+        "[AUTH] /api/auth/me returned 403. Keeping Supabase session."
+      );
+
+      return _resolvedSession;
+    }
+
+    // Don't log users out because of server errors.
     if (res.status >= 500) {
       console.error(
         "[AUTH] /api/auth/me server error:",
         res.status
       );
 
-      /*
-       * Preserve an already-known session/profile.
-       */
       return _resolvedSession;
     }
-
-
-    // ----------------------------------------------------------------------
-    // Still 401 after refresh
-    // ----------------------------------------------------------------------
-
-    if (res.status === 401) {
-      console.error(
-        "[AUTH] Backend rejected Supabase token even after refresh."
-      );
-
-      /*
-       * Check Supabase directly before considering logout.
-       */
-      const current =
-        await getSupabaseSession();
-
-      if (!current) {
-        _resolvedSession = null;
-        return null;
-      }
-
-      /*
-       * Supabase still considers the user authenticated.
-       * Therefore don't destroy the cached application session.
-       */
-      return _resolvedSession;
-    }
-
 
     console.error(
       "[AUTH] /api/auth/me failed:",
@@ -417,11 +368,8 @@ async function resolveApplicationSession() {
     );
 
     return _resolvedSession;
-
   } catch (err) {
-    /*
-     * Network/backend connectivity problems are not logout.
-     */
+    // Network/backend problems are not logout events.
     console.error(
       "[AUTH] Could not reach /api/auth/me:",
       err
@@ -432,13 +380,6 @@ async function resolveApplicationSession() {
 }
 
 
-// ==========================================================================
-// Bootstrap application authentication
-// ==========================================================================
-
-/**
- * Resolve the application session only once per authentication state.
- */
 function bootstrapSession() {
   if (!_profilePromise) {
     _profilePromise =
@@ -456,6 +397,20 @@ function bootstrapSession() {
  */
 function getSession() {
   return _resolvedSession;
+}
+
+/*
+ * Resolve the authenticated application session WITHOUT redirecting.
+ * Login/register pages use this so a stale browser Supabase session
+ * cannot force an immediate redirect back to the homepage.
+ */
+async function getAuthenticatedSession() {
+  try {
+    return await bootstrapSession();
+  } catch (err) {
+    console.error("[AUTH] getAuthenticatedSession failed:", err);
+    return null;
+  }
 }
 
 
@@ -1393,3 +1348,5 @@ document.addEventListener(
 
   }
 );
+window.getAuthenticatedSession = getAuthenticatedSession;
+window.clearLocalAuthSession = clearLocalAuthSession;

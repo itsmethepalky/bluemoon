@@ -50,8 +50,18 @@
   })();
 
   async function goToApp() {
-    const session = await requireAuth(); // no role filter - just resolves + caches
-    window.location.href = session.role === "customer" ? "my-account.html" : "dashboard.html";
+    // IMPORTANT: Do not use requireAuth() here.
+    // requireAuth() redirects unauthenticated users to index.html.
+    // A stale Supabase session in a normal browser can therefore cause
+    // an immediate login-page -> homepage redirect.
+    const session = await getAuthenticatedSession();
+
+    if (!session) {
+      return;
+    }
+
+    window.location.href =
+      session.role === "customer" ? "my-account.html" : "dashboard.html";
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
