@@ -6,7 +6,7 @@
 <meta name="description" content="Billing, stock, purchases, supplier orders, customer credit and reports for small retail shops — one system, closed out clean every night.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
 <link rel="stylesheet" href="css/style.css"><style>
 /* ==========================================================================
    THE BLUE MOON — SELF-CONTAINED LANDING PAGE
@@ -1302,7 +1302,10 @@ body.landing .landing-footer a:hover {
 </section><footer class="landing-footer">
   <span>© 2026 The Blue Moon</span>
   <a href="login.html">Sign in</a>
-</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/api.js"></script><script>
+<div style="margin-top: 10px;">
+  <a href="/privacy.html">Privacy Policy</a>
+</div>
+</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0" integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp" crossorigin="anonymous"></script><script src="js/api.js"></script><script>
   // A visitor who's already signed in gets their CTA pointed straight at
   // the app instead of the sign-in form (but the landing page itself
   // stays visible either way - this is the front door, not a redirect).
