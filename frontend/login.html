@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · The Blue Moon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <a href="index.html" class="mark">The Blue Moon</a>
+    </div>
+    <p class="login-sub">Small business management &amp; POS &mdash; sign in to continue</p>
+
+    <div class="login-error" id="loginError"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" id="loginBtn">Sign in</button>
+    </form>
+
+    <p class="login-hint" style="text-align:center;">
+      New customer? <a href="register.html">Create an account</a>
+    </p>
+
+    <div class="login-hint">
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/api.js"></script>
+<script>
+  // If already signed in, skip straight into the app.
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) await goToApp();
+  })();
+
+  async function goToApp() {
+    const session = await requireAuth(); // no role filter - just resolves + caches
+    window.location.href = session.role === "customer" ? "my-account.html" : "dashboard.html";
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById("loginError");
+    const btn = document.getElementById("loginBtn");
+    errorBox.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Signing in…";
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await goToApp();
+    } catch (err) {
+      errorBox.textContent = err.message || "Sign in failed. Please try again.";
+      errorBox.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Sign in";
+    }
+  });
+</script>
+</body>
+</html>

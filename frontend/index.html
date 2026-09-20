@@ -1,0 +1,1322 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Blue Moon — Small Business Management &amp; POS</title>
+<meta name="description" content="Billing, stock, purchases, supplier orders, customer credit and reports for small retail shops — one system, closed out clean every night.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css"><style>
+/* ==========================================================================
+   THE BLUE MOON — SELF-CONTAINED LANDING PAGE
+   All landing-page styling lives inside this file.
+   ========================================================================== */
+
+:root {
+  --bm-ink: #16324f;
+  --bm-ink-dark: #10263d;
+  --bm-blue: #24507c;
+  --bm-blue-light: #eaf2f9;
+  --bm-copper: #c9722e;
+  --bm-copper-dark: #a85d22;
+  --bm-green: #2f6f4f;
+
+  --bm-bg: #f5f6f8;
+  --bm-white: #ffffff;
+  --bm-border: #e1e4e9;
+
+  --bm-text: #1b2430;
+  --bm-text-secondary: #5b6472;
+  --bm-muted: #8a92a0;
+
+  --bm-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --bm-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont,
+             "Segoe UI", sans-serif;
+  --bm-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+
+/* ==========================================================================
+   RESET
+   ========================================================================== */
+
+body.landing {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      circle at 85% 5%,
+      rgba(36, 80, 124, 0.10),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f5f6f8 100%
+    );
+  color: var(--bm-text);
+  font-family: var(--bm-body);
+  overflow-x: hidden;
+}
+
+body.landing *,
+body.landing *::before,
+body.landing *::after {
+  box-sizing: border-box;
+}
+
+body.landing a {
+  color: inherit;
+}
+
+body.landing button,
+body.landing input,
+body.landing select,
+body.landing textarea {
+  font-family: inherit;
+}
+
+
+/* ==========================================================================
+   HEADER / NAVIGATION
+   ========================================================================== */
+
+body.landing .landing-nav {
+  width: 100%;
+  min-height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding:
+    0 max(28px, env(safe-area-inset-left))
+    0 max(28px, env(safe-area-inset-right));
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border-bottom: 1px solid var(--bm-border);
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.landing .landing-nav-mark {
+  font-family: var(--bm-display);
+  font-size: 22px;
+  font-weight: 600;
+
+  color: var(--bm-ink);
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+body.landing .landing-nav-mark:hover {
+  color: var(--bm-copper-dark);
+  transform: translateY(-1px);
+}
+
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+body.landing .btn {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 9px 16px;
+
+  border-radius: 7px;
+  border: 1px solid transparent;
+
+  font-family: var(--bm-body);
+  font-size: 13.5px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+body.landing .btn:hover {
+  transform: translateY(-1px);
+}
+
+body.landing .btn:active {
+  transform: translateY(0);
+}
+
+body.landing .btn-primary {
+  background: var(--bm-copper);
+  border-color: var(--bm-copper);
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(201, 114, 46, 0.18);
+}
+
+body.landing .btn-primary:hover {
+  background: var(--bm-copper-dark);
+  border-color: var(--bm-copper-dark);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(168, 93, 34, 0.23);
+}
+
+body.landing .btn-outline {
+  background: #fff;
+  border-color: #c7ccd4;
+  color: var(--bm-ink);
+}
+
+body.landing .btn-outline:hover {
+  background: #f1f3f6;
+  border-color: #aeb5bf;
+}
+
+body.landing .btn-dark {
+  background: var(--bm-ink);
+  border-color: var(--bm-ink);
+  color: #fff;
+}
+
+body.landing .btn-dark:hover {
+  background: var(--bm-ink-dark);
+  border-color: var(--bm-ink-dark);
+}
+
+body.landing .btn-lg {
+  min-height: 50px;
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+
+body.landing .hero {
+  width: min(1160px, calc(100% - 56px));
+
+  min-height: 610px;
+
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 0.9fr);
+
+  align-items: center;
+
+  gap: 70px;
+
+  padding: 70px 0 80px;
+}
+
+body.landing .hero-copy {
+  min-width: 0;
+}
+
+body.landing .hero-copy h1 {
+  max-width: 680px;
+
+  margin: 0 0 22px;
+
+  color: var(--bm-ink);
+
+  font-family: var(--bm-display);
+  font-size: clamp(42px, 5.2vw, 68px);
+  font-weight: 600;
+
+  line-height: 1.03;
+
+  letter-spacing: -2.7px;
+}
+
+body.landing .hero-sub {
+  max-width: 610px;
+
+  margin: 0 0 30px;
+
+  color: var(--bm-text-secondary);
+
+  font-size: 17px;
+  line-height: 1.72;
+}
+
+body.landing .hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+
+/* ==========================================================================
+   HERO VISUAL
+   ========================================================================== */
+
+body.landing .hero-visual {
+  min-width: 0;
+}
+
+body.landing .night-panel {
+  position: relative;
+
+  width: 100%;
+  min-height: 490px;
+
+  overflow: hidden;
+
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at 75% 20%,
+      rgba(79, 128, 176, 0.25),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 25% 85%,
+      rgba(201, 114, 46, 0.10),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      #10263d 0%,
+      #16324f 48%,
+      #0d2135 100%
+    );
+
+  box-shadow:
+    0 28px 65px rgba(16, 38, 61, 0.22),
+    0 5px 15px rgba(16, 38, 61, 0.08);
+
+  isolation: isolate;
+}
+
+body.landing .night-panel::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0.025),
+      transparent 35%
+    );
+
+  pointer-events: none;
+}
+
+body.landing .star {
+  position: absolute;
+
+  width: 4px;
+  height: 4px;
+
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.82);
+
+  box-shadow:
+    0 0 7px rgba(255,255,255,0.45);
+
+  animation: bm-twinkle 3.5s ease-in-out infinite;
+}
+
+body.landing .star:nth-of-type(2) {
+  animation-delay: .7s;
+}
+
+body.landing .star:nth-of-type(3) {
+  animation-delay: 1.2s;
+}
+
+body.landing .star:nth-of-type(4) {
+  animation-delay: 1.9s;
+}
+
+body.landing .star:nth-of-type(5) {
+  animation-delay: .4s;
+}
+
+body.landing .star:nth-of-type(6) {
+  animation-delay: 2.2s;
+}
+
+body.landing .star:nth-of-type(7) {
+  animation-delay: 1.5s;
+}
+
+@keyframes bm-twinkle {
+  0%, 100% {
+    opacity: .35;
+    transform: scale(.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+
+/* ==========================================================================
+   CRESCENT MOON
+   ========================================================================== */
+
+body.landing .crescent {
+  position: absolute;
+
+  width: 120px;
+  height: 120px;
+
+  top: 60px;
+  right: 65px;
+
+  border-radius: 50%;
+
+  background: #f3e7c9;
+
+  box-shadow:
+    0 0 35px rgba(243, 231, 201, 0.15);
+
+  z-index: 1;
+}
+
+body.landing .crescent::after {
+  content: "";
+
+  position: absolute;
+
+  width: 120px;
+  height: 120px;
+
+  top: -14px;
+  left: 28px;
+
+  border-radius: 50%;
+
+  background: #16324f;
+}
+
+
+/* ==========================================================================
+   RECEIPT CARD
+   ========================================================================== */
+
+body.landing .receipt-card {
+  position: absolute;
+
+  z-index: 5;
+
+  left: 50%;
+  top: 50%;
+
+  width: min(360px, calc(100% - 50px));
+
+  transform: translate(-50%, -42%) rotate(-2deg);
+
+  padding: 28px 27px 30px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffdf8 0%,
+      #faf8f1 100%
+    );
+
+  color: #27313b;
+
+  border-radius: 3px;
+
+  box-shadow:
+    0 28px 45px rgba(0,0,0,0.25),
+    0 5px 10px rgba(0,0,0,0.10);
+
+  font-family: var(--bm-mono);
+
+  overflow: hidden;
+}
+
+body.landing .receipt-card::before,
+body.landing .receipt-card::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  height: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      transparent 5px,
+      #fffdf8 5px,
+      #fffdf8 10px,
+      transparent 10px,
+      transparent 15px
+    );
+
+  background-size: 20px 10px;
+}
+
+body.landing .receipt-card::before {
+  top: -4px;
+}
+
+body.landing .receipt-card::after {
+  bottom: -4px;
+  transform: rotate(180deg);
+}
+
+body.landing .receipt-shop {
+  margin-bottom: 4px;
+
+  color: var(--bm-ink);
+
+  font-family: var(--bm-display);
+  font-size: 21px;
+  font-weight: 600;
+
+  text-align: center;
+}
+
+body.landing .receipt-meta {
+  margin-bottom: 22px;
+
+  color: #89909a;
+
+  font-size: 10px;
+
+  text-align: center;
+}
+
+body.landing .receipt-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 7px 0;
+
+  color: #46515d;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+body.landing .receipt-line span:first-child {
+  max-width: 65%;
+}
+
+body.landing .receipt-line span:last-child {
+  white-space: nowrap;
+}
+
+body.landing .receipt-divider {
+  height: 1px;
+
+  margin: 12px 0;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #c9c6bd 0,
+      #c9c6bd 5px,
+      transparent 5px,
+      transparent 9px
+    );
+}
+
+body.landing .receipt-total {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  color: var(--bm-ink);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body.landing .receipt-stamp {
+  position: absolute;
+
+  right: 20px;
+  bottom: 20px;
+
+  width: 42px;
+  height: 42px;
+
+  opacity: .7;
+}
+
+
+/* ==========================================================================
+   FEATURES
+   ========================================================================== */
+
+body.landing .features {
+  width: min(1160px, calc(100% - 56px));
+
+  margin: 0 auto;
+
+  padding: 25px 0 85px;
+}
+
+body.landing .features > h2 {
+  margin: 0 0 28px;
+
+  color: var(--bm-ink);
+
+  font-family: var(--bm-display);
+  font-size: 31px;
+  font-weight: 600;
+
+  letter-spacing: -.5px;
+}
+
+body.landing .feature-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+body.landing .feature-card {
+  min-width: 0;
+
+  padding: 23px;
+
+  border: 1px solid var(--bm-border);
+  border-radius: 12px;
+
+  background: #fff;
+
+  box-shadow:
+    0 1px 2px rgba(22, 50, 79, 0.03);
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease;
+}
+
+body.landing .feature-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #ccd5df;
+
+  box-shadow:
+    0 12px 30px rgba(22, 50, 79, 0.08);
+}
+
+body.landing .feature-card.featured {
+  border-color: rgba(201, 114, 46, 0.38);
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffaf5 0%,
+      #fff 100%
+    );
+}
+
+body.landing .feature-icon {
+  width: 43px;
+  height: 43px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 15px;
+
+  border-radius: 10px;
+
+  background: var(--bm-blue-light);
+
+  color: var(--bm-blue);
+
+  font-size: 18px;
+}
+
+body.landing .feature-card.featured .feature-icon {
+  background: rgba(201, 114, 46, 0.12);
+  color: var(--bm-copper-dark);
+}
+
+body.landing .feature-card h3 {
+  margin: 0 0 8px;
+
+  color: var(--bm-ink);
+
+  font-family: var(--bm-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+body.landing .feature-card p {
+  margin: 0;
+
+  color: var(--bm-text-secondary);
+
+  font-size: 13px;
+
+  line-height: 1.65;
+}
+
+
+/* ==========================================================================
+   CTA BAND
+   ========================================================================== */
+
+body.landing .cta-band {
+  width: min(1160px, calc(100% - 56px));
+
+  margin: 0 auto 65px;
+
+  padding: 30px 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  border-radius: 14px;
+
+  background: var(--bm-ink);
+
+  color: #fff;
+
+  box-shadow:
+    0 15px 35px rgba(22, 50, 79, 0.13);
+}
+
+body.landing .cta-band h2 {
+  margin: 0 0 5px;
+
+  color: #fff;
+
+  font-family: var(--bm-display);
+  font-size: 25px;
+  font-weight: 600;
+}
+
+body.landing .cta-band p {
+  margin: 0;
+
+  max-width: 620px;
+
+  color: rgba(255,255,255,.68);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+body.landing .cta-band .hero-actions {
+  flex-shrink: 0;
+}
+
+body.landing .cta-band .btn-outline {
+  background: transparent;
+
+  border-color: rgba(255,255,255,.35);
+
+  color: #fff;
+}
+
+body.landing .cta-band .btn-outline:hover {
+  background: rgba(255,255,255,.09);
+
+  border-color: rgba(255,255,255,.55);
+}
+
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+body.landing .landing-footer {
+  width: min(1160px, calc(100% - 56px));
+
+  margin: 0 auto;
+
+  padding:
+    25px 0
+    max(30px, env(safe-area-inset-bottom));
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  border-top: 1px solid var(--bm-border);
+
+  color: var(--bm-muted);
+
+  font-size: 12px;
+}
+
+body.landing .landing-footer a {
+  color: var(--bm-blue);
+
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+body.landing .landing-footer a:hover {
+  color: var(--bm-copper-dark);
+  text-decoration: underline;
+}
+
+
+/* ==========================================================================
+   TABLET
+   ========================================================================== */
+
+@media (max-width: 1000px) {
+  body.landing .hero {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(350px, .85fr);
+
+    gap: 45px;
+  }
+
+  body.landing .night-panel {
+    min-height: 440px;
+  }
+
+  body.landing .receipt-card {
+    width: min(330px, calc(100% - 35px));
+  }
+
+  body.landing .feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* ==========================================================================
+   TABLET / SMALL LAPTOP
+   ========================================================================== */
+
+@media (max-width: 850px) {
+  body.landing .landing-nav {
+    min-height: 66px;
+
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  body.landing .hero {
+    width: min(700px, calc(100% - 40px));
+
+    min-height: auto;
+
+    grid-template-columns: 1fr;
+
+    gap: 50px;
+
+    padding-top: 55px;
+    padding-bottom: 70px;
+  }
+
+  body.landing .hero-copy {
+    text-align: center;
+  }
+
+  body.landing .hero-copy h1,
+  body.landing .hero-sub {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.landing .hero-actions {
+    justify-content: center;
+  }
+
+  body.landing .hero-visual {
+    width: min(590px, 100%);
+    margin: 0 auto;
+  }
+
+  body.landing .night-panel {
+    min-height: 450px;
+  }
+
+  body.landing .features,
+  body.landing .cta-band,
+  body.landing .landing-footer {
+    width: min(700px, calc(100% - 40px));
+  }
+
+  body.landing .cta-band {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body.landing .cta-band .hero-actions {
+    justify-content: flex-start;
+  }
+}
+
+
+/* ==========================================================================
+   PHONE
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  body.landing .landing-nav {
+    min-height: 62px;
+
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  body.landing .landing-nav-mark {
+    font-size: 19px;
+  }
+
+  body.landing .landing-nav .btn {
+    min-height: 38px;
+
+    padding: 7px 12px;
+
+    font-size: 12px;
+  }
+
+  body.landing .hero {
+    width: calc(100% - 28px);
+
+    gap: 38px;
+
+    padding-top: 43px;
+    padding-bottom: 55px;
+  }
+
+  body.landing .hero-copy h1 {
+    font-size: 43px;
+
+    line-height: 1.04;
+
+    letter-spacing: -1.9px;
+  }
+
+  body.landing .hero-sub {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  body.landing .hero-actions {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  body.landing .hero-actions .btn {
+    width: 100%;
+  }
+
+  body.landing .hero-visual {
+    width: 100%;
+  }
+
+  body.landing .night-panel {
+    min-height: 390px;
+
+    border-radius: 17px;
+  }
+
+  body.landing .crescent {
+    width: 80px;
+    height: 80px;
+
+    top: 38px;
+    right: 34px;
+  }
+
+  body.landing .crescent::after {
+    width: 80px;
+    height: 80px;
+
+    top: -9px;
+    left: 20px;
+  }
+
+  body.landing .receipt-card {
+    width: calc(100% - 38px);
+
+    padding: 23px 20px 27px;
+
+    transform: translate(-50%, -42%) rotate(-1.5deg);
+  }
+
+  body.landing .receipt-shop {
+    font-size: 18px;
+  }
+
+  body.landing .receipt-line {
+    font-size: 10px;
+  }
+
+  body.landing .features {
+    width: calc(100% - 28px);
+
+    padding-bottom: 55px;
+  }
+
+  body.landing .features > h2 {
+    font-size: 27px;
+
+    margin-bottom: 20px;
+  }
+
+  body.landing .feature-grid {
+    grid-template-columns: 1fr;
+
+    gap: 11px;
+  }
+
+  body.landing .feature-card {
+    padding: 19px;
+  }
+
+  body.landing .feature-card:hover {
+    transform: none;
+  }
+
+  body.landing .cta-band {
+    width: calc(100% - 28px);
+
+    margin-bottom: 40px;
+
+    padding: 24px 20px;
+
+    border-radius: 12px;
+  }
+
+  body.landing .cta-band h2 {
+    font-size: 23px;
+  }
+
+  body.landing .cta-band .hero-actions {
+    width: 100%;
+  }
+
+  body.landing .landing-footer {
+    width: calc(100% - 28px);
+
+    padding-bottom: max(
+      25px,
+      env(safe-area-inset-bottom)
+    );
+  }
+}
+
+
+/* ==========================================================================
+   SMALL PHONE
+   ========================================================================== */
+
+@media (max-width: 420px) {
+  body.landing .landing-nav-mark {
+    font-size: 17px;
+  }
+
+  body.landing .hero {
+    width: calc(100% - 22px);
+
+    padding-top: 35px;
+  }
+
+  body.landing .hero-copy h1 {
+    font-size: 37px;
+
+    letter-spacing: -1.5px;
+  }
+
+  body.landing .hero-sub {
+    font-size: 14px;
+  }
+
+  body.landing .night-panel {
+    min-height: 350px;
+  }
+
+  body.landing .receipt-card {
+    width: calc(100% - 28px);
+
+    padding: 20px 17px 25px;
+  }
+
+  body.landing .receipt-line {
+    gap: 8px;
+    font-size: 9.5px;
+  }
+
+  body.landing .receipt-total {
+    font-size: 12px;
+  }
+
+  body.landing .features,
+  body.landing .cta-band,
+  body.landing .landing-footer {
+    width: calc(100% - 22px);
+  }
+
+  body.landing .feature-card {
+    padding: 17px;
+  }
+
+  body.landing .cta-band {
+    padding: 21px 17px;
+  }
+
+  body.landing .landing-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+
+/* ==========================================================================
+   VERY SMALL PHONE
+   ========================================================================== */
+
+@media (max-width: 350px) {
+  body.landing .landing-nav {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  body.landing .landing-nav-mark {
+    font-size: 16px;
+  }
+
+  body.landing .landing-nav .btn {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  body.landing .hero-copy h1 {
+    font-size: 33px;
+  }
+
+  body.landing .night-panel {
+    min-height: 315px;
+  }
+
+  body.landing .crescent {
+    width: 62px;
+    height: 62px;
+
+    top: 28px;
+    right: 25px;
+  }
+
+  body.landing .crescent::after {
+    width: 62px;
+    height: 62px;
+
+    top: -7px;
+    left: 15px;
+  }
+
+  body.landing .receipt-card {
+    width: calc(100% - 20px);
+  }
+}
+
+
+/* ==========================================================================
+   TOUCH DEVICES
+   ========================================================================== */
+
+@media (hover: none) and (pointer: coarse) {
+  body.landing .btn {
+    min-height: 44px;
+  }
+
+  body.landing .feature-card:hover {
+    transform: none;
+  }
+}
+
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  body.landing *,
+  body.landing *::before,
+  body.landing *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ==========================================================================
+   SAFE AREA
+   ========================================================================== */
+
+@supports (padding: max(0px)) {
+  body.landing .landing-nav {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+}
+</style></head><body class="landing"><header class="landing-nav">
+  <a href="index.html" class="landing-nav-mark">The Blue Moon</a>
+  <a href="login.html" class="btn btn-outline" id="navCta">Sign in</a>
+</header><section class="hero">
+  <div class="hero-copy">
+    <h1>One counter. Every part of the shop.</h1>
+    <p class="hero-sub">
+      The Blue Moon handles billing, stock, purchases, supplier orders
+      and customer credit — so closing out at the end of the day takes
+      minutes, not a headache.
+    </p>
+    <div class="hero-actions">
+      <a href="login.html" class="btn btn-primary btn-lg" id="heroCta">Sign in</a>
+      <a href="register.html" class="btn btn-outline btn-lg">Create a customer account</a>
+    </div>
+  </div>  <div class="hero-visual">
+    <div class="night-panel">
+      <span class="star" style="top:14%; left:18%;"></span>
+      <span class="star" style="top:22%; left:76%;"></span>
+      <span class="star" style="top:38%; left:10%;"></span>
+      <span class="star" style="top:64%; left:82%;"></span>
+      <span class="star" style="top:78%; left:14%;"></span>
+      <span class="star" style="top:55%; left:88%;"></span>
+      <span class="star" style="top:12%; left:52%;"></span>
+      <span class="crescent"></span>  <div class="receipt-card">
+    <div class="receipt-shop">The Blue Moon</div>
+    <div class="receipt-meta">Invoice No. 1042</div>
+
+    <div class="receipt-line"><span>Basmati Rice 5kg</span><span>780.00</span></div>
+    <div class="receipt-line"><span>Mineral Water 1L</span><span>30.00</span></div>
+    <div class="receipt-line"><span>Wai Wai Noodles (6)</span><span>150.00</span></div>
+
+    <div class="receipt-divider"></div>
+    <div class="receipt-total"><span>Total</span><span>Rs. 960.00</span></div>
+
+    <svg class="receipt-stamp" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="17" fill="#f3e7c9"/>
+      <circle cx="13" cy="15" r="17" fill="#fffdf8"/>
+    </svg>
+  </div>
+</div>
+
+  </div>
+</section><section class="features">
+  <h2>What it handles</h2>
+  <div class="feature-grid">
+    <div class="feature-card featured">
+      <div class="feature-icon"><i class="bi bi-cash-register"></i></div>
+      <h3>Billing &amp; POS</h3>
+      <p>Ring up a sale in seconds — search or tap a product, apply a discount, and take cash, card, mobile wallet or store credit.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-box-seam"></i></div>
+      <h3>Stock &amp; Inventory</h3>
+      <p>Every sale and purchase updates stock automatically, and products are flagged before they run out.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-truck"></i></div>
+      <h3>Purchases &amp; Suppliers</h3>
+      <p>Log what comes in from each supplier in one purchase order — stock adjusts itself, no manual recount.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-people"></i></div>
+      <h3>Customer Credit</h3>
+      <p>Keep a running balance for regulars who buy on credit, and record payments as they come in.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-bar-chart-line"></i></div>
+      <h3>Reports</h3>
+      <p>See what sold today, what's low on the shelf, and what the month actually made.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-shield-lock"></i></div>
+      <h3>Role-Based Access</h3>
+      <p>Owners, counter staff and customers each sign in to exactly what they need — nothing more.</p>
+    </div>
+  </div>
+</section><section class="cta-band">
+  <div>
+    <h2>Ready to open up?</h2>
+    <p>Sign in to run the counter, or create a customer account to track your own purchases.</p>
+  </div>
+  <div class="hero-actions">
+    <a href="login.html" class="btn btn-dark">Sign in</a>
+    <a href="register.html" class="btn btn-outline">Create a customer account</a>
+  </div>
+</section><footer class="landing-footer">
+  <span>© 2026 The Blue Moon</span>
+  <a href="login.html">Sign in</a>
+</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/api.js"></script><script>
+  // A visitor who's already signed in gets their CTA pointed straight at
+  // the app instead of the sign-in form (but the landing page itself
+  // stays visible either way - this is the front door, not a redirect).
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (!data.session) return;
+    const session = await requireAuth();
+    if (!session) return;
+    const target = session.role === "customer" ? "my-account.html" : "dashboard.html";
+    const label = session.role === "customer" ? "Go to My Account" : "Go to Dashboard";
+    document.querySelectorAll("#navCta, #heroCta").forEach((el) => {
+      el.href = target;
+      el.textContent = label;
+    });
+  })();
+</script></body>
+</html>

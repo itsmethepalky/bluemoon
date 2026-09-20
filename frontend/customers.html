@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customers · Blue Moon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="sidebar">
+    <div class="sidebar-brand"><span class="mark">Blue Moon</span></div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="dashboard.html" data-roles="admin,staff"><i class="bi bi-speedometer2"></i>Dashboard</a>
+      <a class="nav-link" href="my-account.html" data-roles="customer"><i class="bi bi-person-circle"></i>My Account</a>
+      <a class="nav-link" href="pos.html" data-roles="admin,staff"><i class="bi bi-cash-stack"></i>POS / Billing</a>
+      <a class="nav-link" href="sales-history.html" data-roles="admin,staff"><i class="bi bi-receipt"></i>Sales History</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Catalog &amp; Stock</div>
+      <a class="nav-link" href="products.html" data-roles="admin,staff"><i class="bi bi-box-seam"></i>Products &amp; Inventory</a>
+      <a class="nav-link" href="purchases.html" data-roles="admin,staff"><i class="bi bi-truck"></i>Purchases</a>
+      <a class="nav-link" href="suppliers.html" data-roles="admin,staff"><i class="bi bi-building"></i>Suppliers</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">People</div>
+      <a class="nav-link active" href="customers.html" data-roles="admin,staff"><i class="bi bi-people"></i>Customers</a>
+      <a class="nav-link" href="users.html" data-roles="admin"><i class="bi bi-shield-lock"></i>Staff Accounts</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Insights</div>
+      <a class="nav-link" href="reports.html" data-roles="admin,staff"><i class="bi bi-bar-chart-line"></i>Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="who" data-who>—</span>
+      <span data-role>—</span>
+      <button class="btn btn-ghost-light btn-sm" data-logout>Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="flex gap-8" style="align-items:center;">
+        <button class="menu-toggle"><i class="bi bi-list"></i></button>
+        <div>
+          <h1>Customers</h1>
+          <div class="subtitle">Contact details, credit limits and outstanding balances</div>
+        </div>
+      </div>
+      <div class="flex gap-8">
+        <input id="searchInput" placeholder="Search by name…" style="max-width:220px;">
+        <button class="btn btn-primary" id="addCustomerBtn"><i class="bi bi-plus-lg"></i> Add customer</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="card">
+        <div class="card-body table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Email</th>
+                <th class="text-right">Credit limit</th><th class="text-right">Balance owed</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="customersBody">
+              <tr class="skeleton-row"><td colspan="6">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state hidden" id="customersEmpty">
+            <i class="bi bi-people"></i>No customers match your search.
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add / edit customer modal -->
+<div class="modal-backdrop" id="customerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="customerModalTitle">Add customer</h2>
+      <button class="modal-close" data-close="customerModal">&times;</button>
+    </div>
+    <form id="customerForm">
+      <div class="modal-body">
+        <input type="hidden" id="customerId">
+        <div class="field"><label for="customerName">Full name</label><input id="customerName" required></div>
+        <div class="form-row">
+          <div class="field"><label for="customerPhone">Phone</label><input id="customerPhone"></div>
+          <div class="field"><label for="customerEmail">Email</label><input id="customerEmail" type="email"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="customerAddress">Address</label><input id="customerAddress"></div>
+          <div class="field"><label for="creditLimit">Credit limit</label><input id="creditLimit" type="number" min="0" step="0.01" value="0"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close="customerModal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Credit payment modal -->
+<div class="modal-backdrop" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Record credit payment</h2>
+      <button class="modal-close" data-close="paymentModal">&times;</button>
+    </div>
+    <form id="paymentForm">
+      <div class="modal-body">
+        <input type="hidden" id="paymentCustomerId">
+        <p class="small text-muted" id="paymentCustomerLabel"></p>
+        <div class="field">
+          <label for="paymentAmount">Amount received</label>
+          <input id="paymentAmount" type="number" min="0.01" step="0.01" required>
+        </div>
+        <div class="field">
+          <label for="paymentNote">Note (optional)</label>
+          <input id="paymentNote" placeholder="Cash, mobile transfer, etc.">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close="paymentModal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Record payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Purchase history modal -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="historyModalTitle">Purchase history</h2>
+      <button class="modal-close" data-close="historyModal">&times;</button>
+    </div>
+    <div class="modal-body table-scroll">
+      <table>
+        <thead><tr><th>Invoice</th><th>Date</th><th class="text-right">Total</th><th>Payment</th><th>Status</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="historyEmpty"><i class="bi bi-receipt"></i>No purchases yet.</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close="historyModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/api.js"></script>
+<script src="js/customers.js"></script>
+</body>
+</html>

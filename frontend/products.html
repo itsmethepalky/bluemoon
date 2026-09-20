@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products & Inventory · The Blue Moon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="sidebar">
+    <div class="sidebar-brand"><span class="mark">The Blue Moon</span></div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="dashboard.html" data-roles="admin,staff"><i class="bi bi-speedometer2"></i>Dashboard</a>
+      <a class="nav-link" href="my-account.html" data-roles="customer"><i class="bi bi-person-circle"></i>My Account</a>
+      <a class="nav-link" href="pos.html" data-roles="admin,staff"><i class="bi bi-cash-stack"></i>POS / Billing</a>
+      <a class="nav-link" href="sales-history.html" data-roles="admin,staff"><i class="bi bi-receipt"></i>Sales History</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Catalog &amp; Stock</div>
+      <a class="nav-link active" href="products.html" data-roles="admin,staff"><i class="bi bi-box-seam"></i>Products &amp; Inventory</a>
+      <a class="nav-link" href="purchases.html" data-roles="admin,staff"><i class="bi bi-truck"></i>Purchases</a>
+      <a class="nav-link" href="suppliers.html" data-roles="admin,staff"><i class="bi bi-building"></i>Suppliers</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">People</div>
+      <a class="nav-link" href="customers.html" data-roles="admin,staff"><i class="bi bi-people"></i>Customers</a>
+      <a class="nav-link" href="users.html" data-roles="admin"><i class="bi bi-shield-lock"></i>Staff Accounts</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Insights</div>
+      <a class="nav-link" href="reports.html" data-roles="admin,staff"><i class="bi bi-bar-chart-line"></i>Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="who" data-who>—</span>
+      <span data-role>—</span>
+      <button class="btn btn-ghost-light btn-sm" data-logout>Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="flex gap-8" style="align-items:center;">
+        <button class="menu-toggle"><i class="bi bi-list"></i></button>
+        <div>
+          <h1>Products &amp; Inventory</h1>
+          <div class="subtitle">Catalog, pricing and stock on hand</div>
+        </div>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-outline" id="manageTagsBtn"><i class="bi bi-tags"></i> Categories &amp; brands</button>
+        <button class="btn btn-primary" id="addProductBtn"><i class="bi bi-plus-lg"></i> Add product</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="card mb-16">
+        <div class="card-body">
+          <div class="flex gap-8" style="flex-wrap:wrap;">
+            <input id="searchInput" placeholder="Search by name or SKU…" style="max-width:260px;">
+            <select id="categoryFilter" style="max-width:200px;"><option value="">All categories</option></select>
+            <label class="flex gap-8" style="align-items:center; font-weight:500; font-size:13px; color:var(--text-secondary); margin:0;">
+              <input type="checkbox" id="lowStockOnly" style="width:auto;"> Low stock only
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th><th>Product</th><th>Category</th><th>Brand</th>
+                <th class="text-right">Cost</th><th class="text-right">Price</th>
+                <th class="text-right">Stock</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="productsBody">
+              <tr class="skeleton-row"><td colspan="8">Loading…</td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state hidden" id="productsEmpty">
+            <i class="bi bi-box-seam"></i>No products match your filters.
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add / edit product modal -->
+<div class="modal-backdrop" id="productModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="productModalTitle">Add product</h2>
+      <button class="modal-close" data-close="productModal">&times;</button>
+    </div>
+    <form id="productForm">
+      <div class="modal-body">
+        <input type="hidden" id="productId">
+        <div class="form-row">
+          <div class="field"><label for="sku">SKU</label><input id="sku" required></div>
+          <div class="field"><label for="name">Product name</label><input id="name" required></div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label for="brandSelect">Brand</label>
+            <select id="brandSelect"><option value="">—</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="costPrice">Cost price</label><input id="costPrice" type="number" min="0" step="0.01" required></div>
+          <div class="field"><label for="unitPrice">Selling price</label><input id="unitPrice" type="number" min="0" step="0.01" required></div>
+        </div>
+        <div class="form-row">
+          <div class="field" id="stockField"><label for="stockQuantity">Opening stock</label><input id="stockQuantity" type="number" min="0" step="1"></div>
+          <div class="field"><label for="reorderLevel">Reorder level</label><input id="reorderLevel" type="number" min="0" step="1" value="5" required></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close="productModal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="productSaveBtn">Save product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Adjust stock modal -->
+<div class="modal-backdrop" id="stockModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Adjust stock</h2>
+      <button class="modal-close" data-close="stockModal">&times;</button>
+    </div>
+    <form id="stockForm">
+      <div class="modal-body">
+        <input type="hidden" id="stockProductId">
+        <p class="text-muted small" id="stockProductLabel"></p>
+        <div class="field">
+          <label for="stockDelta">Change in quantity</label>
+          <input id="stockDelta" type="number" step="1" required placeholder="e.g. 10 or -3">
+        </div>
+        <div class="field">
+          <label for="stockReason">Reason (optional)</label>
+          <input id="stockReason" placeholder="Stock count correction, damage, etc.">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close="stockModal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Apply</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Categories & brands modal -->
+<div class="modal-backdrop" id="tagsModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Categories &amp; brands</h2>
+      <button class="modal-close" data-close="tagsModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:14px;">Categories</h3>
+          <form id="categoryForm" class="flex gap-8 mb-16">
+            <input id="newCategoryName" placeholder="New category name" required>
+            <button class="btn btn-outline btn-sm" type="submit">Add</button>
+          </form>
+          <ul id="categoryList" style="list-style:none; padding:0; margin:0;"></ul>
+        </div>
+        <div>
+          <h3 style="font-size:14px;">Brands</h3>
+          <form id="brandForm" class="flex gap-8 mb-16">
+            <input id="newBrandName" placeholder="New brand name" required>
+            <button class="btn btn-outline btn-sm" type="submit">Add</button>
+          </form>
+          <ul id="brandList" style="list-style:none; padding:0; margin:0;"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" data-close="tagsModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/api.js"></script>
+<script src="js/products.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account · Blue Moon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="mark">Blue Moon</span>
+    </div>
+    <p class="login-sub">Create a customer account to track your purchases &amp; credit balance</p>
+
+    <div class="login-error" id="formError"></div>
+
+    <form id="registerForm">
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input id="fullName" required autofocus>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone">
+      </div>
+      <div class="field">
+        <label for="address">Address (optional)</label>
+        <input id="address">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="new-password" minlength="6" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" id="registerBtn">Create account</button>
+    </form>
+
+    <p class="login-hint" style="text-align:center;">
+      Already have an account? <a href="login.html">Sign in</a>
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/api.js"></script>
+<script>
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById("formError");
+    const btn = document.getElementById("registerBtn");
+    errorBox.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Creating account…";
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      // user_metadata here is read by the on_auth_user_created DB trigger,
+      // which creates the matching profiles + customers rows automatically
+      // (role defaults to 'customer' when not specified).
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, phone: phone || null, address: address || null },
+        },
+      });
+      if (error) throw error;
+
+      if (data.session) {
+        // "Confirm email" is off for this project - signed in immediately.
+        window.location.href = "index.html";
+      } else {
+        // "Confirm email" is on - Supabase emailed a confirmation link.
+        document.getElementById("registerForm").style.display = "none";
+        errorBox.style.display = "block";
+        errorBox.style.color = "var(--text-primary)";
+        errorBox.textContent =
+          "Account created! Check " + email + " for a confirmation link, then sign in.";
+      }
+    } catch (err) {
+      errorBox.textContent = err.message || "Could not create your account. Please try again.";
+      errorBox.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create account";
+    }
+  });
+</script>
+</body>
+</html>

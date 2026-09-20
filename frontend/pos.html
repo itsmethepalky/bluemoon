@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS / Billing · The Blue Moon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="sidebar">
+    <div class="sidebar-brand"><span class="mark">The Blue Moon</span></div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="dashboard.html" data-roles="admin,staff"><i class="bi bi-speedometer2"></i>Dashboard</a>
+      <a class="nav-link" href="my-account.html" data-roles="customer"><i class="bi bi-person-circle"></i>My Account</a>
+      <a class="nav-link active" href="pos.html" data-roles="admin,staff"><i class="bi bi-cash-stack"></i>POS / Billing</a>
+      <a class="nav-link" href="sales-history.html" data-roles="admin,staff"><i class="bi bi-receipt"></i>Sales History</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Catalog &amp; Stock</div>
+      <a class="nav-link" href="products.html" data-roles="admin,staff"><i class="bi bi-box-seam"></i>Products &amp; Inventory</a>
+      <a class="nav-link" href="purchases.html" data-roles="admin,staff"><i class="bi bi-truck"></i>Purchases</a>
+      <a class="nav-link" href="suppliers.html" data-roles="admin,staff"><i class="bi bi-building"></i>Suppliers</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">People</div>
+      <a class="nav-link" href="customers.html" data-roles="admin,staff"><i class="bi bi-people"></i>Customers</a>
+      <a class="nav-link" href="users.html" data-roles="admin"><i class="bi bi-shield-lock"></i>Staff Accounts</a>
+      <div class="sidebar-section-label" data-roles="admin,staff">Insights</div>
+      <a class="nav-link" href="reports.html" data-roles="admin,staff"><i class="bi bi-bar-chart-line"></i>Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="who" data-who>—</span>
+      <span data-role>—</span>
+      <button class="btn btn-ghost-light btn-sm" data-logout>Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="flex gap-8" style="align-items:center;">
+        <button class="menu-toggle"><i class="bi bi-list"></i></button>
+        <div>
+          <h1>Point of Sale</h1>
+          <div class="subtitle">Tap a product to add it to the bill</div>
+        </div>
+      </div>
+      <a class="btn btn-outline" href="dashboard.html"><i class="bi bi-arrow-left"></i> Back to dashboard</a>
+    </header>
+
+    <main class="content">
+      <div class="pos-layout">
+        <div>
+          <input class="pos-search" id="productSearch" placeholder="Search products by name or SKU…" autofocus>
+          <div class="product-grid" id="productGrid">
+            <div class="empty-state"><i class="bi bi-hourglass-split"></i>Loading products…</div>
+          </div>
+        </div>
+
+        <aside class="receipt-panel">
+          <h2>Current bill</h2>
+
+          <div class="field" style="margin-top:14px;">
+            <label style="color:var(--text-on-ink-muted);">Customer</label>
+            <select id="customerSelect" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); color:#fff;">
+              <option value="">Walk-in / cash customer</option>
+            </select>
+          </div>
+
+          <div class="receipt-cart" id="cartLines">
+            <div class="receipt-empty">Cart is empty — add a product to begin.</div>
+          </div>
+
+          <div class="form-row" style="margin-bottom:10px;">
+            <div class="field" style="margin-bottom:0;">
+              <label style="color:var(--text-on-ink-muted);">Discount</label>
+              <input id="orderDiscount" type="number" min="0" step="0.01" value="0">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label style="color:var(--text-on-ink-muted);">Tax</label>
+              <input id="orderTax" type="number" min="0" step="0.01" value="0">
+            </div>
+          </div>
+
+          <div class="receipt-totals" id="totalsBlock">
+            <div class="row"><span>Subtotal</span><span id="totalSubtotal">Rs. 0.00</span></div>
+            <div class="row"><span>Discount</span><span id="totalDiscount">− Rs. 0.00</span></div>
+            <div class="row"><span>Tax</span><span id="totalTax">+ Rs. 0.00</span></div>
+            <div class="row grand"><span>Total</span><span id="totalGrand">Rs. 0.00</span></div>
+          </div>
+
+          <div class="form-row" style="margin-top:14px;">
+            <div class="field" style="margin-bottom:0;">
+              <label style="color:var(--text-on-ink-muted);">Payment method</label>
+              <select id="paymentMethod" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); color:#fff;">
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="mobile">Mobile / wallet</option>
+                <option value="credit">Credit (bill to customer)</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label style="color:var(--text-on-ink-muted);">Amount paid now</label>
+              <input id="amountPaid" type="number" min="0" step="0.01" value="0">
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block mt-16" id="completeSaleBtn" disabled>
+            <i class="bi bi-check2-circle"></i> Complete sale
+          </button>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Receipt / confirmation modal -->
+<div class="modal-backdrop" id="receiptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Sale complete</h2>
+      <button class="modal-close" data-close="receiptModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="receiptContent" class="mono small"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="printReceiptBtn"><i class="bi bi-printer"></i> Print</button>
+      <button class="btn btn-primary" id="newSaleBtn">Start next sale</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/api.js"></script>
+<script src="js/pos.js"></script>
+</body>
+</html>
