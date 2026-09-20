@@ -54,7 +54,7 @@
     // requireAuth() redirects unauthenticated users to index.html.
     // A stale Supabase session in a normal browser can therefore cause
     // an immediate login-page -> homepage redirect.
-    const session = await getAuthenticatedSession();
+    const session = await window.getAuthenticatedSession();
 
     if (!session) {
       return;
