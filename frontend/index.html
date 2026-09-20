@@ -1305,21 +1305,5 @@ body.landing .landing-footer a:hover {
 <div style="margin-top: 10px;">
   <a href="/privacy.html">Privacy Policy</a>
 </div>
-</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0" integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp" crossorigin="anonymous"></script><script src="js/api.js"></script><script>
-  // A visitor who's already signed in gets their CTA pointed straight at
-  // the app instead of the sign-in form (but the landing page itself
-  // stays visible either way - this is the front door, not a redirect).
-  (async () => {
-    const { data } = await supabaseClient.auth.getSession();
-    if (!data.session) return;
-    const session = await requireAuth();
-    if (!session) return;
-    const target = session.role === "customer" ? "my-account.html" : "dashboard.html";
-    const label = session.role === "customer" ? "Go to My Account" : "Go to Dashboard";
-    document.querySelectorAll("#navCta, #heroCta").forEach((el) => {
-      el.href = target;
-      el.textContent = label;
-    });
-  })();
-</script></body>
+</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0" integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp" crossorigin="anonymous"></script><script src="js/api.js"></script><script src="js/index.js"></script></body>
 </html>
