@@ -1,3 +1,6 @@
+import os
+
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -22,6 +25,10 @@ from .routers import (
 
 
 app = FastAPI(
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+
     title="The Blue Moon API",
     description="Small Business Management & Point-of-Sale System (Supabase-backed)",
     version="2.0.0",
