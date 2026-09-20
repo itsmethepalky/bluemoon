@@ -692,19 +692,15 @@ async function apiFetch(
 
 
     /*
-     * IMPORTANT:
+     * bootstrapSession() has already resolved and validated the
+     * application session. Reuse its current access token here.
      *
-     * Don't blindly use:
-     *
-     *     _resolvedSession.access_token
-     *
-     * because it may be stale during token refresh.
-     *
-     * Ask Supabase for the current token.
+     * Token refreshes update _resolvedSession, so this avoids
+     * performing another Supabase getSession() call for every
+     * protected API request.
      */
     const token =
-      await getCurrentAccessToken();
-
+      _resolvedSession?.access_token || null;
 
     if (token) {
       headers.Authorization =

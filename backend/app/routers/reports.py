@@ -94,56 +94,58 @@ def sales_trend(
     _user=Depends(require_staff),
 ):
     """
-    Total sales for each of the last `days` days, using Nepal dates.
+    Total sales for each of the last `days` days using Nepal calendar dates.
+
+    Sale timestamps are stored as naive UTC datetimes, so PostgreSQL converts
+    them to Asia/Kathmandu before grouping. This keeps the aggregation in the
+    database without loading every sale into Python.
     """
+    days = max(1, min(days, 90))
 
     today = nepal_today()
     start = today - timedelta(days=days - 1)
     start_utc = nepal_day_start_utc(start)
 
+    # sale_date is stored as a naive UTC timestamp.
+    # Convert UTC -> Nepal time before extracting the calendar date.
+    nepal_day = func.date(
+        func.timezone(
+            "Asia/Kathmandu",
+            func.timezone("UTC", models.Sale.sale_date),
+        )
+    )
+
     rows = (
         db.query(
-            func.date(models.Sale.sale_date).label("day"),
-            func.coalesce(func.sum(models.Sale.total_amount), 0).label("total"),
+            nepal_day.label("day"),
+            func.coalesce(
+                func.sum(models.Sale.total_amount),
+                0,
+            ).label("total"),
         )
         .filter(models.Sale.sale_date >= start_utc)
-        .group_by("day")
+        .group_by(nepal_day)
         .all()
     )
 
-    # Database timestamps are UTC, so convert each sale date to Nepal
-    # time before assigning it to a calendar day.
-    totals_by_day = {}
+    totals_by_day = {
+        str(day): float(total or 0)
+        for day, total in rows
+    }
 
-    sales_query = (
-        db.query(models.Sale.sale_date, models.Sale.total_amount)
-        .filter(models.Sale.sale_date >= start_utc)
-        .all()
-    )
-
-    for sale_date, amount in sales_query:
-        if sale_date.tzinfo is None:
-            sale_date = sale_date.replace(tzinfo=timezone.utc)
-
-        local_day = sale_date.astimezone(NEPAL_TZ).date()
-        totals_by_day[str(local_day)] = (
-            totals_by_day.get(str(local_day), 0.0) + float(amount or 0)
+    return [
+        schemas.SalesPoint(
+            label=(start + timedelta(days=i)).strftime("%b %d"),
+            total=round(
+                totals_by_day.get(
+                    str(start + timedelta(days=i)),
+                    0.0,
+                ),
+                2,
+            ),
         )
-
-    points: List[schemas.SalesPoint] = []
-
-    for i in range(days):
-        day = start + timedelta(days=i)
-
-        points.append(
-            schemas.SalesPoint(
-                label=day.strftime("%b %d"),
-                total=round(totals_by_day.get(str(day), 0.0), 2),
-            )
-        )
-
-    return points
-
+        for i in range(days)
+    ]
 
 @router.get("/top-products", response_model=List[schemas.TopProduct])
 def top_products(
@@ -243,9 +245,50 @@ def profit_report(
     """
     Rough profit estimate: revenue from sale items minus each
     product's current cost price.
+
+    PostgreSQL performs the aggregation so matching SaleItems are not
+    loaded into Python.
     """
 
-    query = db.query(models.SaleItem).join(models.Sale)
+    query = (
+        db.query(
+            func.coalesce(
+                func.sum(
+                    models.SaleItem.subtotal
+                    * func.greatest(
+                        0,
+                        models.SaleItem.quantity
+                        - models.SaleItem.returned_quantity,
+                    )
+                    / func.nullif(
+                        models.SaleItem.quantity,
+                        0,
+                    )
+                ),
+                0,
+            ).label("revenue"),
+            func.coalesce(
+                func.sum(
+                    func.coalesce(models.Product.cost_price, 0)
+                    * func.greatest(
+                        0,
+                        models.SaleItem.quantity
+                        - models.SaleItem.returned_quantity,
+                    )
+                ),
+                0,
+            ).label("cost"),
+        )
+        .select_from(models.SaleItem)
+        .join(
+            models.Sale,
+            models.Sale.id == models.SaleItem.sale_id,
+        )
+        .outerjoin(
+            models.Product,
+            models.Product.id == models.SaleItem.product_id,
+        )
+    )
 
     if start:
         query = query.filter(
@@ -259,27 +302,10 @@ def profit_report(
             models.Sale.sale_date < nepal_day_start_utc(next_day)
         )
 
-    revenue = 0.0
-    cost = 0.0
+    row = query.one()
 
-    for item in query.all():
-        # Only quantities that were actually kept by the customer count
-        # toward revenue and estimated cost.
-        net_quantity = max(
-            0,
-            item.quantity - item.returned_quantity,
-        )
-
-        if item.quantity <= 0 or net_quantity <= 0:
-            continue
-
-        net_ratio = net_quantity / item.quantity
-
-        revenue += item.subtotal * net_ratio
-        cost += (
-            (item.product.cost_price if item.product else 0)
-            * net_quantity
-        )
+    revenue = float(row.revenue or 0)
+    cost = float(row.cost or 0)
 
     return {
         "revenue": round(revenue, 2),
