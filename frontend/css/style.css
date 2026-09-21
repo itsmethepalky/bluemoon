@@ -3580,3 +3580,156 @@ body.landing-page *::after {
     grid-column: 1 !important;
   }
 }
+
+/* =========================================================================
+   MOBILE MODAL FIX
+   Long forms must scroll inside the modal on phones.
+   ========================================================================= */
+
+.modal-backdrop {
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal {
+  width: min(480px, 100%);
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100dvh - 24px);
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modal.modal-wide {
+  width: min(720px, 100%);
+  max-width: 100%;
+}
+
+.modal-header {
+  flex: 0 0 auto;
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.modal-footer {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Android / small-screen modal */
+@media (max-width: 600px) {
+  .modal-backdrop {
+    align-items: flex-start;
+    justify-content: center;
+
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+
+    overflow-y: auto;
+  }
+
+  .modal,
+  .modal.modal-wide {
+    width: 100%;
+    max-width: 100%;
+
+    max-height: calc(100dvh - 16px);
+    min-height: 0;
+
+    margin: 0 auto;
+  }
+
+  .modal-body {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding: 16px;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .modal-footer {
+    flex: 0 0 auto;
+
+    padding: 12px 16px;
+
+    background: var(--bg-surface);
+  }
+}
+
+/* =========================================================================
+   MODAL FORM SCROLL FIX
+   Forms inside modals must participate in the modal flex layout.
+   This makes long Add/Edit forms scroll correctly on mobile.
+   ========================================================================= */
+
+.modal > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.modal > form > .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal > form > .modal-footer {
+  flex: 0 0 auto;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .modal {
+    max-height: calc(100dvh - 16px);
+    min-height: 0;
+  }
+
+  .modal > form {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .modal > form > .modal-body {
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .modal > form > .modal-footer {
+    flex-shrink: 0;
+  }
+}
