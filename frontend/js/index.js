@@ -15,8 +15,8 @@
 
   const target =
     session.role === "customer"
-      ? "my-account.html"
-      : "dashboard.html";
+      ? "/my-account"
+      : "/dashboard";
 
   const label =
     session.role === "customer"

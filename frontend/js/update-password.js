@@ -139,7 +139,7 @@ document
       await supabaseClient.auth.signOut({ scope: "local" });
 
       setTimeout(() => {
-        window.location.href = "login.html?reset=success";
+        window.location.href = "/login?reset=success";
       }, 1800);
     } catch (err) {
       showMessage(

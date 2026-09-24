@@ -1,10 +1,11 @@
+from decimal import Decimal
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from .models import UserRole, PaymentMethod, PaymentStatus, SaleStatus
+from .models import UserRole, PaymentMethod, PaymentStatus, SaleStatus, OrderStatus
 
 
 # ---------------------------------------------------------------------------
@@ -308,3 +309,91 @@ class InventoryStatusItem(BaseModel):
     category: str
     stock_value: float
     quantity: int
+
+
+# ============================================================
+# E-commerce / Storefront
+# ============================================================
+
+class StoreProductImageOut(BaseModel):
+    id: int
+    image_url: str
+    is_primary: bool
+    sort_order: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StoreProductOut(BaseModel):
+    id: int
+    sku: str
+    name: str
+    description: Optional[str] = None
+    category_id: Optional[int] = None
+    brand_id: Optional[int] = None
+    unit_price: Decimal
+    stock_quantity: int
+    is_active: bool
+    images: List[StoreProductImageOut] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StoreCategoryOut(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StoreBrandOut(BaseModel):
+    id: int
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StoreOrderItemCreate(BaseModel):
+    product_id: int
+    quantity: int = Field(gt=0)
+
+
+class StoreOrderCreate(BaseModel):
+    items: List[StoreOrderItemCreate] = Field(min_length=1)
+    shipping_address: str = Field(min_length=3, max_length=1000)
+    phone: Optional[str] = Field(default=None, max_length=30)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+    payment_method: PaymentMethod = PaymentMethod.cash
+
+
+class StoreOrderItemOut(BaseModel):
+    id: int
+    product_id: Optional[int] = None
+    quantity: int
+    unit_price: Decimal
+    discount: Decimal
+    subtotal: Decimal
+    product_name: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StoreOrderOut(BaseModel):
+    id: int
+    order_no: str
+    status: OrderStatus
+    subtotal: Decimal
+    discount: Decimal
+    tax: Decimal
+    total_amount: Decimal
+    payment_method: PaymentMethod
+    payment_status: PaymentStatus
+    shipping_address: str
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    items: List[StoreOrderItemOut] = []
+
+    model_config = ConfigDict(from_attributes=True)

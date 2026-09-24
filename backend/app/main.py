@@ -4,6 +4,7 @@ IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -21,6 +22,8 @@ from .routers import (
     sales,
     returns,
     reports,
+    store,
+    product_images,
 )
 
 
@@ -147,6 +150,8 @@ for router in (
     sales.router,
     returns.router,
     reports.router,
+    store.router,
+    product_images.router,
 ):
     app.include_router(router)
 
@@ -157,22 +162,109 @@ def health_check():
 
 
 # ---------------------------------------------------------------------------
-# Static frontend
+# Frontend pages
 # ---------------------------------------------------------------------------
 #
-# The frontend lives beside backend/:
+# Clean URLs:
+# /                -> index.html
+# /login           -> login.html
+# /dashboard       -> dashboard.html
+# /products        -> products.html
+# etc.
 #
-# the-blue-moon/
-# ├── backend/
-# └── frontend/
-#
-# This lets the same FastAPI process serve the production UI.
+# Static assets such as /css/* and /js/* are still served normally.
 #
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
 
-if FRONTEND_DIR.exists():
-    app.mount(
-        "/",
-        StaticFiles(directory=str(FRONTEND_DIR), html=True),
-        name="frontend",
-    )
+
+def serve_page(filename: str):
+    return FileResponse(FRONTEND_DIR / filename)
+
+
+@app.get("/", include_in_schema=False)
+def frontend_home():
+    return serve_page("index.html")
+
+
+@app.get("/login", include_in_schema=False)
+def login_page():
+    return serve_page("login.html")
+
+
+@app.get("/register", include_in_schema=False)
+def register_page():
+    return serve_page("register.html")
+
+
+@app.get("/forgot-password", include_in_schema=False)
+def forgot_password_page():
+    return serve_page("forgot-password.html")
+
+
+@app.get("/dashboard", include_in_schema=False)
+def dashboard_page():
+    return serve_page("dashboard.html")
+
+
+@app.get("/products", include_in_schema=False)
+def products_page():
+    return serve_page("products.html")
+
+
+@app.get("/suppliers", include_in_schema=False)
+def suppliers_page():
+    return serve_page("suppliers.html")
+
+
+@app.get("/customers", include_in_schema=False)
+def customers_page():
+    return serve_page("customers.html")
+
+
+@app.get("/purchases", include_in_schema=False)
+def purchases_page():
+    return serve_page("purchases.html")
+
+
+@app.get("/pos", include_in_schema=False)
+def pos_page():
+    return serve_page("pos.html")
+
+
+@app.get("/sales-history", include_in_schema=False)
+def sales_history_page():
+    return serve_page("sales-history.html")
+
+
+@app.get("/reports", include_in_schema=False)
+def reports_page():
+    return serve_page("reports.html")
+
+
+@app.get("/users", include_in_schema=False)
+def users_page():
+    return serve_page("users.html")
+
+
+@app.get("/my-account", include_in_schema=False)
+def my_account_page():
+    return serve_page("my-account.html")
+
+
+@app.get("/privacy", include_in_schema=False)
+def privacy_page():
+    return serve_page("privacy.html")
+
+
+# Static assets
+app.mount(
+    "/css",
+    StaticFiles(directory=str(FRONTEND_DIR / "css")),
+    name="frontend-css",
+)
+
+app.mount(
+    "/js",
+    StaticFiles(directory=str(FRONTEND_DIR / "js")),
+    name="frontend-js",
+)

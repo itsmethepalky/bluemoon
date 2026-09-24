@@ -2,6 +2,7 @@ let allProducts = [];
 let categories = [];
 let brands = [];
 let session;
+let pendingProductImages = [];
 
 (async function init() {
   session = await requireAuth(["admin", "staff"]);
@@ -13,6 +14,11 @@ let session;
   document.getElementById("stockForm").addEventListener("submit", saveStockAdjustment);
   document.getElementById("categoryForm").addEventListener("submit", addCategory);
   document.getElementById("brandForm").addEventListener("submit", addBrand);
+
+  document
+    .getElementById("productImageFiles")
+    .addEventListener("change", handleProductImageSelection);
+
   document.getElementById("searchInput").addEventListener("input", debounce(renderTable, 200));
   document.getElementById("categoryFilter").addEventListener("change", renderTable);
   document.getElementById("lowStockOnly").addEventListener("change", renderTable);
@@ -187,6 +193,277 @@ function renderTable() {
     );
 }
 
+
+function handleProductImageSelection(e) {
+  const files = Array.from(e.target.files || []);
+
+  for (const file of files) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast(`${file.name}: only JPEG, PNG, or WebP images are allowed`, "error");
+      continue;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast(`${file.name}: image must be 5 MB or smaller`, "error");
+      continue;
+    }
+
+    pendingProductImages.push(file);
+  }
+
+  e.target.value = "";
+  renderPendingProductImages();
+}
+
+function renderPendingProductImages() {
+  const grid = document.getElementById("productImagesGrid");
+  const empty = document.getElementById("productImagesEmpty");
+
+  if (!grid || !empty) return;
+
+  grid.querySelectorAll("[data-pending-image]").forEach((el) => el.remove());
+
+  if (!pendingProductImages.length) {
+    const hasExistingImages =
+      grid.querySelectorAll("[data-existing-image]").length > 0;
+
+    if (!hasExistingImages) {
+      empty.textContent = "No images added yet.";
+      empty.classList.remove("hidden");
+    }
+
+    return;
+  }
+
+  empty.classList.add("hidden");
+
+  pendingProductImages.forEach((file, index) => {
+    const url = URL.createObjectURL(file);
+
+    const card = document.createElement("div");
+    card.className = "product-image-card";
+    card.dataset.pendingImage = "true";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = file.name;
+
+    const actions = document.createElement("div");
+    actions.className = "image-actions";
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "btn btn-danger-outline btn-sm";
+    removeButton.textContent = "Remove";
+
+    removeButton.addEventListener("click", () => {
+      URL.revokeObjectURL(url);
+      pendingProductImages.splice(index, 1);
+      renderPendingProductImages();
+    });
+
+    actions.appendChild(removeButton);
+    card.appendChild(img);
+    card.appendChild(actions);
+    grid.appendChild(card);
+  });
+}
+
+async function loadProductImages(productId) {
+  const grid = document.getElementById("productImagesGrid");
+  const empty = document.getElementById("productImagesEmpty");
+
+  if (!grid || !empty) return;
+
+  grid.innerHTML = "";
+  empty.textContent = "Loading images...";
+  empty.classList.remove("hidden");
+
+  try {
+    const images = await api.get(`/product-images/${productId}`);
+
+    grid.innerHTML = "";
+
+    if (!images.length && !pendingProductImages.length) {
+      empty.textContent = "No images added yet.";
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    empty.classList.add("hidden");
+
+    for (const image of images) {
+      const card = document.createElement("div");
+      card.className = "product-image-card";
+      card.dataset.existingImage = "true";
+
+      const img = document.createElement("img");
+      img.src = image.image_url;
+      img.alt = "Product image";
+
+      card.appendChild(img);
+
+      if (image.is_primary) {
+        const badge = document.createElement("span");
+        badge.className = "image-primary";
+        badge.textContent = "Primary";
+        card.appendChild(badge);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "image-actions";
+
+      if (!image.is_primary) {
+        const primaryButton = document.createElement("button");
+        primaryButton.type = "button";
+        primaryButton.className = "btn btn-outline btn-sm";
+        primaryButton.textContent = "Primary";
+
+        primaryButton.addEventListener("click", () => {
+          setPrimaryProductImage(image.id, productId);
+        });
+
+        actions.appendChild(primaryButton);
+      }
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "btn btn-danger-outline btn-sm";
+      deleteButton.textContent = "Delete";
+
+      deleteButton.addEventListener("click", () => {
+        deleteProductImage(image.id, productId);
+      });
+
+      actions.appendChild(deleteButton);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    }
+
+    renderPendingProductImages();
+
+  } catch (err) {
+    console.error("Failed to load product images:", err);
+    grid.innerHTML = "";
+    empty.textContent = "Could not load product images.";
+    empty.classList.remove("hidden");
+  }
+}
+
+async function uploadPendingProductImages(productId) {
+  if (!pendingProductImages.length) return;
+
+  const files = [...pendingProductImages];
+
+  for (const file of files) {
+    const token = await getCurrentAccessToken();
+
+    if (!token) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`/api/product-images/${productId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let message = `Failed to upload ${file.name}`;
+
+      try {
+        const data = await response.json();
+        if (data?.detail) {
+          message = data.detail;
+        }
+      } catch (_) {}
+
+      throw new Error(message);
+    }
+  }
+
+  pendingProductImages = [];
+}
+
+async function setPrimaryProductImage(imageId, productId) {
+  try {
+    const token = await getCurrentAccessToken();
+
+    if (!token) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    const response = await fetch(`/api/product-images/${imageId}/primary`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let message = "Failed to set primary image";
+
+      try {
+        const data = await response.json();
+        if (data?.detail) {
+          message = data.detail;
+        }
+      } catch (_) {}
+
+      throw new Error(message);
+    }
+
+    toast("Primary image updated", "success");
+    await loadProductImages(productId);
+
+  } catch (err) {
+    friendlyError(err);
+  }
+}
+
+async function deleteProductImage(imageId, productId) {
+  if (!confirm("Delete this product image?")) return;
+
+  try {
+    const token = await getCurrentAccessToken();
+
+    if (!token) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    const response = await fetch(`/api/product-images/${imageId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let message = "Failed to delete image";
+
+      try {
+        const data = await response.json();
+        if (data?.detail) {
+          message = data.detail;
+        }
+      } catch (_) {}
+
+      throw new Error(message);
+    }
+
+    toast("Image deleted", "success");
+    await loadProductImages(productId);
+
+  } catch (err) {
+    friendlyError(err);
+  }
+}
+
 function openAddProduct() {
   document.getElementById("productModalTitle").textContent = "Add product";
   document.getElementById("productForm").reset();
@@ -194,6 +471,13 @@ function openAddProduct() {
 
   document.getElementById("stockField").classList.remove("hidden");
   document.getElementById("reorderLevel").value = 5;
+
+  pendingProductImages = [];
+
+  document.getElementById("productImagesGrid").innerHTML = "";
+  document.getElementById("productImagesEmpty").textContent =
+    "No images added yet.";
+  document.getElementById("productImagesEmpty").classList.remove("hidden");
 
   openModal("productModal");
 }
@@ -216,7 +500,10 @@ function openEditProduct(id) {
 
   document.getElementById("stockField").classList.add("hidden");
 
+  pendingProductImages = [];
+
   openModal("productModal");
+  loadProductImages(p.id);
 }
 
 async function saveProduct(e) {
@@ -243,6 +530,8 @@ async function saveProduct(e) {
   }
 
   try {
+    let productId = id;
+
     if (id) {
       await api.put(`/products/${id}`, payload);
       toast("Product updated", "success");
@@ -251,12 +540,17 @@ async function saveProduct(e) {
         document.getElementById("stockQuantity").value || 0
       );
 
-      await api.post("/products", payload);
+      const created = await api.post("/products", payload);
+      productId = created.id;
+
       toast("Product added", "success");
     }
 
+    await uploadPendingProductImages(productId);
+
     closeModal("productModal");
     await loadProducts();
+
   } catch (err) {
     friendlyError(err);
   }

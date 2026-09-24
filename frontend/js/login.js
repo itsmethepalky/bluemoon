@@ -22,8 +22,8 @@ async function goToApp() {
 
   window.location.href =
     session.role === "customer"
-      ? "my-account.html"
-      : "dashboard.html";
+      ? "/my-account"
+      : "/dashboard";
 }
 
 async function waitForTurnstile() {

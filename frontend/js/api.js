@@ -437,7 +437,7 @@ async function requireAuth(allowedRoles) {
    */
   if (!session) {
     window.location.href =
-      "index.html";
+      "/";
 
     return null;
   }
@@ -455,8 +455,8 @@ async function requireAuth(allowedRoles) {
   ) {
     window.location.href =
       session.role === "customer"
-        ? "my-account.html"
-        : "dashboard.html";
+        ? "/my-account"
+        : "/dashboard";
 
     return null;
   }
@@ -485,7 +485,7 @@ async function logout() {
   _refreshPromise = null;
 
   window.location.href =
-    "index.html";
+    "/";
 }
 
 

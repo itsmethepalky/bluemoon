@@ -44,15 +44,17 @@ def dashboard_summary(db: Session = Depends(get_db), _user=Depends(require_staff
     today_sales = (
         db.query(
             func.count(models.Sale.id),
-            func.coalesce(func.sum(models.Sale.total_amount), 0),
+            func.coalesce(func.sum(models.Sale.amount_paid), 0),
         )
         .filter(models.Sale.sale_date >= today_start_utc)
+        .filter(models.Sale.status != models.SaleStatus.returned)
         .first()
     )
 
     month_total = (
         db.query(func.coalesce(func.sum(models.Sale.total_amount), 0))
         .filter(models.Sale.sale_date >= month_start_utc)
+        .filter(models.Sale.status != models.SaleStatus.returned)
         .scalar()
     )
 
@@ -124,6 +126,7 @@ def sales_trend(
             ).label("total"),
         )
         .filter(models.Sale.sale_date >= start_utc)
+        .filter(models.Sale.status != models.SaleStatus.returned)
         .group_by(nepal_day)
         .all()
     )

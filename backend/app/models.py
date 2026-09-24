@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum, Text
+    Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum, Text, Numeric
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
@@ -26,6 +26,7 @@ class PaymentMethod(str, enum.Enum):
     card = "card"
     mobile = "mobile"
     credit = "credit"
+    cod = "cod"
 
 
 class PaymentStatus(str, enum.Enum):
@@ -38,6 +39,17 @@ class SaleStatus(str, enum.Enum):
     completed = "completed"
     returned = "returned"
     partially_returned = "partially_returned"
+
+
+class OrderStatus(str, enum.Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    processing = "processing"
+    ready = "ready"
+    out_for_delivery = "out_for_delivery"
+    delivered = "delivered"
+    cancelled = "cancelled"
+    returned = "returned"
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +93,7 @@ class Customer(Base):
 
     user = relationship("Profile", back_populates="customer_profile")
     sales = relationship("Sale", back_populates="customer")
+    orders = relationship("Order", back_populates="customer")
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +140,115 @@ class Product(Base):
 
     category = relationship("Category", back_populates="products")
     brand = relationship("Brand", back_populates="products")
+    images = relationship(
+        "ProductImage",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
+
+# ---------------------------------------------------------------------------
+# E-commerce
+# ---------------------------------------------------------------------------
+
+class ProductImage(Base):
+    __tablename__ = "product_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(
+        Integer,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    storage_path = Column(Text, nullable=False)
+    image_url = Column(Text, nullable=False)
+    is_primary = Column(Boolean, default=False, nullable=False)
+    sort_order = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    product = relationship("Product", back_populates="images")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_no = Column(String(30), unique=True, nullable=False)
+
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.id"),
+        nullable=False,
+    )
+
+    status = Column(
+        Enum(OrderStatus, name="order_status"),
+        default=OrderStatus.pending,
+        nullable=False,
+    )
+
+    subtotal = Column(Numeric(12, 2), default=0, nullable=False)
+    discount = Column(Numeric(12, 2), default=0, nullable=False)
+    tax = Column(Numeric(12, 2), default=0, nullable=False)
+    total_amount = Column(Numeric(12, 2), default=0, nullable=False)
+
+    payment_method = Column(
+        Enum(PaymentMethod, name="payment_method"),
+        default=PaymentMethod.cash,
+        nullable=False,
+    )
+
+    payment_status = Column(
+        Enum(PaymentStatus, name="payment_status"),
+        default=PaymentStatus.unpaid,
+        nullable=False,
+    )
+
+    shipping_address = Column(Text, nullable=False)
+    phone = Column(String(30), nullable=True)
+    notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    customer = relationship("Customer", back_populates="orders")
+    items = relationship(
+        "OrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan",
+    )
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    product_id = Column(
+        Integer,
+        ForeignKey("products.id"),
+        nullable=True,
+    )
+
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Numeric(12, 2), default=0, nullable=False)
+    discount = Column(Numeric(12, 2), default=0, nullable=False)
+    subtotal = Column(Numeric(12, 2), default=0, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product")
 
 
 # ---------------------------------------------------------------------------

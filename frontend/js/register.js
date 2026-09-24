@@ -72,7 +72,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
     if (data.session) {
       // Confirm email is off for this project - signed in immediately.
-      window.location.href = "index.html";
+      window.location.href = "/";
     } else {
       // Confirm email is on - Supabase emailed a confirmation link.
       document.getElementById("registerForm").style.display = "none";
