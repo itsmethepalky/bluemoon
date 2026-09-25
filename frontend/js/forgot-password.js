@@ -126,7 +126,7 @@ document
       }
 
       const redirectTo =
-        `${window.location.origin}/update-password.html`;
+        `${window.location.origin}/update-password`;
 
       const { error } =
         await supabaseClient.auth.resetPasswordForEmail(

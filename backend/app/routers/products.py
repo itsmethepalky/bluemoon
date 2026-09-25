@@ -1,123 +1,348 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from .. import models, schemas
 from ..database import get_db
-from ..deps import require_staff, require_admin
+from ..deps import require_staff
 
-router = APIRouter(prefix="/api/products", tags=["Products & Inventory"])
+
+router = APIRouter(
+    prefix="/api/products",
+    tags=["Products"],
+)
 
 
 def _to_out(product: models.Product) -> schemas.ProductOut:
-    out = schemas.ProductOut.model_validate(product)
-    out.category_name = product.category.name if product.category else None
-    out.brand_name = product.brand.name if product.brand else None
-    return out
+    return schemas.ProductOut.model_validate(product)
 
 
-@router.get("", response_model=List[schemas.ProductOut])
+@router.get(
+    "",
+    response_model=List[schemas.ProductOut],
+)
 def list_products(
-    q: Optional[str] = None,
-    category_id: Optional[int] = None,
-    active_only: bool = True,
     db: Session = Depends(get_db),
     _user=Depends(require_staff),
 ):
-    query = db.query(models.Product)
-    if active_only:
-        query = query.filter(models.Product.is_active.is_(True))
-    if category_id:
-        query = query.filter(models.Product.category_id == category_id)
-    if q:
-        like = f"%{q}%"
-        query = query.filter(or_(models.Product.name.ilike(like), models.Product.sku.ilike(like)))
-    products = query.order_by(models.Product.name).all()
-    return [_to_out(p) for p in products]
-
-
-@router.get("/low-stock", response_model=List[schemas.ProductOut])
-def low_stock_products(db: Session = Depends(get_db), _user=Depends(require_staff)):
     products = (
         db.query(models.Product)
-        .filter(models.Product.is_active.is_(True))
-        .filter(models.Product.stock_quantity <= models.Product.reorder_level)
+        .order_by(models.Product.name)
+        .all()
+    )
+
+    return [_to_out(product) for product in products]
+
+
+@router.get(
+    "/low-stock",
+    response_model=List[schemas.ProductOut],
+)
+def low_stock_products(
+    db: Session = Depends(get_db),
+    _user=Depends(require_staff),
+):
+    products = (
+        db.query(models.Product)
+        .filter(
+            models.Product.stock_quantity
+            <= models.Product.reorder_level
+        )
         .order_by(models.Product.stock_quantity)
         .all()
     )
-    return [_to_out(p) for p in products]
+
+    return [_to_out(product) for product in products]
 
 
-@router.get("/{product_id}", response_model=schemas.ProductOut)
-def get_product(product_id: int, db: Session = Depends(get_db), _user=Depends(require_staff)):
-    product = db.query(models.Product).filter(models.Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return _to_out(product)
-
-
-@router.post("", response_model=schemas.ProductOut, status_code=status.HTTP_201_CREATED)
-def create_product(
-    payload: schemas.ProductCreate, db: Session = Depends(get_db), _user=Depends(require_staff)
+@router.get(
+    "/{product_id}",
+    response_model=schemas.ProductOut,
+)
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _user=Depends(require_staff),
 ):
-    if db.query(models.Product).filter(models.Product.sku == payload.sku).first():
-        raise HTTPException(status_code=400, detail="SKU already exists")
-    product = models.Product(**payload.model_dump())
-    db.add(product)
-    db.commit()
-    db.refresh(product)
+    product = (
+        db.query(models.Product)
+        .filter(models.Product.id == product_id)
+        .first()
+    )
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found",
+        )
+
     return _to_out(product)
 
 
-@router.put("/{product_id}", response_model=schemas.ProductOut)
+@router.post(
+    "",
+    response_model=schemas.ProductOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_product(
+    payload: schemas.ProductCreate,
+    db: Session = Depends(get_db),
+    _user=Depends(require_staff),
+):
+    data = payload.model_dump()
+
+    if "sku" in data and data["sku"]:
+        data["sku"] = data["sku"].strip()
+
+    if "name" in data and data["name"]:
+        data["name"] = data["name"].strip()
+
+    if "description" in data and data["description"]:
+        data["description"] = data["description"].strip()
+
+    if data.get("sku"):
+        existing = (
+            db.query(models.Product)
+            .filter(models.Product.sku == data["sku"])
+            .first()
+        )
+
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail="SKU already exists",
+            )
+
+    if data.get("image_url"):
+        image_url = data["image_url"].strip()
+        lowered = image_url.lower()
+
+        if lowered.startswith(
+            ("javascript:", "data:", "vbscript:")
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid image URL",
+            )
+
+        data["image_url"] = image_url
+
+    product = models.Product(**data)
+
+    db.add(product)
+
+    try:
+        db.commit()
+        db.refresh(product)
+
+    except Exception as exc:
+        db.rollback()
+
+        message = str(exc).lower()
+
+        if (
+            "unique" in message
+            or "duplicate" in message
+            or "sku" in message
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="SKU already exists",
+            )
+
+        raise HTTPException(
+            status_code=400,
+            detail="Could not create product",
+        )
+
+    return _to_out(product)
+
+
+@router.put(
+    "/{product_id}",
+    response_model=schemas.ProductOut,
+)
 def update_product(
     product_id: int,
     payload: schemas.ProductUpdate,
     db: Session = Depends(get_db),
     _user=Depends(require_staff),
 ):
-    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    product = (
+        db.query(models.Product)
+        .filter(models.Product.id == product_id)
+        .first()
+    )
+
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    data = payload.model_dump(exclude_unset=True)
-    if "sku" in data and data["sku"] != product.sku:
-        if db.query(models.Product).filter(models.Product.sku == data["sku"]).first():
-            raise HTTPException(status_code=400, detail="SKU already exists")
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found",
+        )
+
+    data = payload.model_dump(
+        exclude_unset=True
+    )
+
+    if "sku" in data and data["sku"] is not None:
+        data["sku"] = data["sku"].strip()
+
+        if data["sku"] != product.sku:
+            existing = (
+                db.query(models.Product)
+                .filter(
+                    models.Product.sku == data["sku"],
+                    models.Product.id != product_id,
+                )
+                .first()
+            )
+
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail="SKU already exists",
+                )
+
+    if "name" in data and data["name"] is not None:
+        data["name"] = data["name"].strip()
+
+    if (
+        "description" in data
+        and data["description"] is not None
+    ):
+        data["description"] = data["description"].strip()
+
+    if "image_url" in data:
+        if data["image_url"] is not None:
+            image_url = data["image_url"].strip()
+            lowered = image_url.lower()
+
+            if lowered.startswith(
+                (
+                    "javascript:",
+                    "data:",
+                    "vbscript:",
+                )
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid image URL",
+                )
+
+            data["image_url"] = image_url
+
+    # Stock is intentionally not accepted here.
+    # Inventory changes must go through adjust_stock()
+    # so they are protected by a row lock.
+    data.pop("stock_quantity", None)
+
     for field, value in data.items():
         setattr(product, field, value)
-    db.commit()
-    db.refresh(product)
+
+    try:
+        db.commit()
+        db.refresh(product)
+
+    except Exception:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=400,
+            detail="Could not update product",
+        )
+
     return _to_out(product)
 
 
-@router.post("/{product_id}/adjust-stock", response_model=schemas.ProductOut)
+@router.post(
+    "/{product_id}/adjust-stock",
+    response_model=schemas.ProductOut,
+)
 def adjust_stock(
     product_id: int,
     payload: schemas.StockAdjust,
     db: Session = Depends(get_db),
     _user=Depends(require_staff),
 ):
-    """Manual stock correction (e.g. stock count, damage, spoilage)."""
-    product = db.query(models.Product).filter(models.Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    new_qty = product.stock_quantity + payload.delta
-    if new_qty < 0:
-        raise HTTPException(status_code=400, detail="Stock quantity cannot go below zero")
-    product.stock_quantity = new_qty
-    db.commit()
-    db.refresh(product)
-    return _to_out(product)
+    """
+    Manual stock correction.
 
+    The product row is locked with FOR UPDATE before
+    reading and changing stock. This prevents concurrent
+    stock adjustments from overwriting each other.
+    """
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
-    """Soft delete: important sales/purchase history stays intact."""
-    product = db.query(models.Product).filter(models.Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    product.is_active = False
-    db.commit()
-    return None
+    if product_id <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid product ID",
+        )
+
+    if payload.delta == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Stock adjustment cannot be zero",
+        )
+
+    try:
+        # Lock the product row until this transaction
+        # commits or rolls back.
+        product = (
+            db.query(models.Product)
+            .filter(
+                models.Product.id == product_id
+            )
+            .with_for_update()
+            .first()
+        )
+
+        if not product:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=404,
+                detail="Product not found",
+            )
+
+        if (
+            product.stock_quantity is None
+            or product.stock_quantity < 0
+        ):
+            db.rollback()
+
+            raise HTTPException(
+                status_code=409,
+                detail="Product stock data is invalid",
+            )
+
+        new_qty = (
+            product.stock_quantity
+            + payload.delta
+        )
+
+        if new_qty < 0:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=400,
+                detail="Stock quantity cannot go below zero",
+            )
+
+        product.stock_quantity = new_qty
+
+        db.commit()
+        db.refresh(product)
+
+        return _to_out(product)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Could not adjust product stock",
+        )

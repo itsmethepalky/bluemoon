@@ -10,7 +10,7 @@
 async function goToApp() {
   // IMPORTANT:
   // Do not use requireAuth() here.
-  // requireAuth() redirects unauthenticated users to index.html.
+  // requireAuth() redirects unauthenticated users to /.
   // A stale Supabase session in a normal browser can therefore cause
   // an immediate login-page -> homepage redirect.
 

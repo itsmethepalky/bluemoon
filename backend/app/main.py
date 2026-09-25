@@ -4,7 +4,7 @@ IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -251,9 +251,58 @@ def my_account_page():
     return serve_page("my-account.html")
 
 
+@app.get("/update-password", include_in_schema=False)
+def update_password_page():
+    return serve_page("update-password.html")
+
+
 @app.get("/privacy", include_in_schema=False)
 def privacy_page():
     return serve_page("privacy.html")
+
+
+
+# ---------------------------------------------------------------------------
+# Legacy .html URL redirects
+# ---------------------------------------------------------------------------
+#
+# Keep old bookmarks/links working while ensuring the browser uses clean URLs.
+#
+
+LEGACY_PAGE_REDIRECTS = {
+    "/index.html": "/",
+    "/login.html": "/login",
+    "/register.html": "/register",
+    "/forgot-password.html": "/forgot-password",
+    "/dashboard.html": "/dashboard",
+    "/products.html": "/products",
+    "/suppliers.html": "/suppliers",
+    "/customers.html": "/customers",
+    "/purchases.html": "/purchases",
+    "/pos.html": "/pos",
+    "/sales-history.html": "/sales-history",
+    "/reports.html": "/reports",
+    "/users.html": "/users",
+    "/my-account.html": "/my-account",
+    "/update-password.html": "/update-password",
+    "/privacy.html": "/privacy",
+}
+
+
+def redirect_legacy_page(path: str):
+    return RedirectResponse(
+        url=LEGACY_PAGE_REDIRECTS[path],
+        status_code=301,
+    )
+
+
+for legacy_path in LEGACY_PAGE_REDIRECTS:
+    app.add_api_route(
+        legacy_path,
+        lambda legacy_path=legacy_path: redirect_legacy_page(legacy_path),
+        methods=["GET"],
+        include_in_schema=False,
+    )
 
 
 # Static assets
