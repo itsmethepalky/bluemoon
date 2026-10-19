@@ -64,6 +64,7 @@ def check_database_connection():
 # origin here instead of using "*".
 #
 ALLOWED_ORIGINS = [
+    "https://thebluemoonstore.onrender.com",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:5500",
